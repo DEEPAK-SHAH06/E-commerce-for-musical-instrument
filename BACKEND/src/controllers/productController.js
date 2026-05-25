@@ -12,10 +12,11 @@ const getProducts = async (req, res) => {
       instrumentType: req.query.instrumentType,
       categoryId: req.query.categoryId,
       categoryName: req.query.categoryName,
-      search: req.query.search
+      search: req.query.search,
+      sortBy: req.query.sortBy
     };
-    const products = await productModel.getProducts(filters);
-    res.json(products);
+    const result = await productModel.getProducts(filters);
+    res.json(result);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error fetching products' });
@@ -45,8 +46,32 @@ const createProduct = async (req, res) => {
   }
 };
 
+const updateProduct = async (req, res) => {
+  try {
+    const product = await productModel.updateProduct(req.params.id, req.body);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json(product);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error updating product' });
+  }
+};
+
+const deleteProduct = async (req, res) => {
+  try {
+    const result = await productModel.deleteProduct(req.params.id);
+    if (!result) return res.status(404).json({ message: 'Product not found' });
+    res.json({ message: 'Product deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error deleting product' });
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
+  updateProduct,
+  deleteProduct
 };

@@ -20,11 +20,13 @@ app.get('/health', (req, res) => {
 const authRouter = require('./routes/auth');
 const productRouter = require('./routes/productRoutes');
 const categoryRouter = require('./routes/categoryRoutes');
+const adminRouter = require('./routes/adminRoutes');
 
 app.use('/api/auth', authRouter);
 app.use('/api/products', productRouter);
 app.use('/api/categories', categoryRouter);
-const PORT = process.env.PORT || 5000;
+app.use('/api/admin', adminRouter);
+const PORT = process.env.PORT || 5001;
 
 const startServer = async () => {
   try {

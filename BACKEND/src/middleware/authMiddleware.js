@@ -8,10 +8,21 @@ const authenticateToken = (req, res, next) => {
   if (!token) return res.status(401).json({ message: 'Access token missing' });
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'Invalid token' });
-    req.user = user; // { id, email }
+    if (err) {
+      console.error('JWT Verify Error:', err.message);
+      return res.status(403).json({ message: 'Invalid token' });
+    }
+    req.user = user; // { id, email, role }
     next();
   });
 };
 
-module.exports = { authenticateToken };
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Require Admin Role!' });
+  }
+};
+
+module.exports = { authenticateToken, isAdmin };
