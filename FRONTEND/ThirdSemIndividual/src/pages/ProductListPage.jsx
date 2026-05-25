@@ -16,19 +16,21 @@ const ProductListPage = () => {
   
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const category = searchParams.get('category');
+  const category = searchParams.get('categoryName'); // Match HeaderBar param name
   const searchQuery = searchParams.get('search');
 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        let url = `/products?priceMin=${priceRange[0]}&priceMax=${priceRange[1]}`;
+        let url = `/products?priceMin=${priceRange[0]}&priceMax=${priceRange[1]}&limit=50&sortBy=${sortBy}`;
         if (category) url += `&categoryName=${category}`;
         if (searchQuery) url += `&search=${searchQuery}`;
         
         const response = await api.get(url);
-        setProducts(response.data);
+        // Handle both old format (array) and new format { products: [], total: 0 }
+        const productsData = Array.isArray(response.data) ? response.data : response.data.products;
+        setProducts(productsData || []);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
@@ -36,7 +38,7 @@ const ProductListPage = () => {
       }
     };
     fetchProducts();
-  }, [category, searchQuery, priceRange]);
+  }, [category, searchQuery, priceRange, sortBy]);
 
   return (
     <Layout style={{ background: '#fff', padding: '24px 0' }}>

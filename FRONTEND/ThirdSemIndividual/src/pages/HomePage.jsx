@@ -18,7 +18,9 @@ const HomePage = () => {
           api.get('/products?limit=8'),
           api.get('/categories')
         ]);
-        setProducts(prodRes.data);
+        // Handle both old format (array) and new format { products: [], total: 0 }
+        const productsData = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data.products;
+        setProducts(productsData || []);
         setCategories(catRes.data.slice(0, 8)); // Show top 8 categories
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -55,7 +57,7 @@ const HomePage = () => {
               <Card
                 hoverable
                 className="product-card"
-                cover={<img alt={cat.name} src={cat.image} style={{ height: 220, objectFit: 'cover' }} />}
+                cover={<img alt={cat.name} src={cat.image_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&q=80'} style={{ height: 220, objectFit: 'cover' }} />}
                 style={{ textAlign: 'center' }}
               >
                 <Card.Meta title={<Text strong style={{ fontSize: '18px' }}>{cat.name}</Text>} />

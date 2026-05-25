@@ -32,18 +32,18 @@ const HeaderBar = () => {
   ];
 
   const mainCategories = [
-    { key: 'guitars', label: 'Guitars & Basses', path: '/products?categoryName=Guitars' },
-    { key: 'drums', label: 'Drums & Percussion', path: '/products?categoryName=Drums' },
-    { key: 'keyboards', label: 'Keys & Pianos', path: '/products?categoryName=Keyboards' },
-    { key: 'studio', label: 'Studio & Recording', path: '/products?categoryName=Studio' },
-    { key: 'lighting', label: 'Lighting & Stage', path: '/products?categoryName=Lighting' },
-    { key: 'dj', label: 'DJ Equipment', path: '/products?categoryName=DJ' },
-    { key: 'software', label: 'Software', path: '/products?categoryName=Software' },
-    { key: 'accessories', label: 'Accessories', path: '/products?categoryName=Accessories' },
+    { key: 'electric-guitars', label: 'Electric Guitars', path: '/products?categoryName=Electric Guitars' },
+    { key: 'acoustic-guitars', label: 'Acoustic Guitars', path: '/products?categoryName=Acoustic Guitars' },
+    { key: 'bass-guitars', label: 'Bass Guitars', path: '/products?categoryName=Bass Guitars' },
+    { key: 'pianos', label: 'Digital Pianos', path: '/products?categoryName=Digital Pianos' },
+    { key: 'synthesizers', label: 'Synthesizers', path: '/products?categoryName=Synthesizers' },
+    { key: 'drums', label: 'Drum Kits', path: '/products?categoryName=Drum Kits' },
+    { key: 'cymbals', label: 'Cymbals', path: '/products?categoryName=Cymbals' },
+    { key: 'violins', label: 'Violins', path: '/products?categoryName=Violins' },
   ];
 
   return (
-    <div style={{ position: 'fixed', zIndex: 1000, width: '100%', top: 0 }}>
+    <div style={{ position: 'sticky', zIndex: 1000, width: '100%', top: 0 }}>
       {/* Top Utility Bar */}
       <div style={{ 
         height: '32px', 

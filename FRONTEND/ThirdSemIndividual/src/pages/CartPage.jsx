@@ -1,6 +1,6 @@
 // src/pages/CartPage.jsx
-import React, { useContext } from 'react';
-import { Row, Col, Typography, Button, Table, Space, InputNumber, Card, Divider, Empty, message } from 'antd';
+import React, { useContext, useState } from 'react';
+import { Row, Col, Typography, Button, Table, Space, InputNumber, Card, Divider, Empty, message, Tag } from 'antd';
 import { DeleteOutlined, ArrowLeftOutlined, CreditCardOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
@@ -11,6 +11,7 @@ const { Title, Text } = Typography;
 const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleCheckout = () => {
@@ -20,9 +21,13 @@ const CartPage = () => {
       return;
     }
     // Simulation of order placement
-    message.success('Order placed successfully! (Simulation)');
-    clearCart();
-    navigate('/dashboard');
+    setLoading(true);
+    setTimeout(() => {
+      message.success('Order placed successfully! Thank you for your purchase.');
+      clearCart();
+      setLoading(false);
+      navigate('/dashboard');
+    }, 1500);
   };
 
   const columns = [
@@ -32,7 +37,7 @@ const CartPage = () => {
       key: 'name',
       render: (text, record) => (
         <Space>
-          <img src={record.image_url || 'https://via.placeholder.com/50'} alt={text} style={{ width: 50, borderRadius: 4 }} />
+          <img src={record.image_url || 'https://via.placeholder.com/50'} alt={text} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4 }} />
           <Link to={`/products/${record.id}`}>{text}</Link>
         </Space>
       ),
@@ -41,7 +46,7 @@ const CartPage = () => {
       title: 'Price',
       dataIndex: 'price',
       key: 'price',
-      render: (price) => `$${price}`,
+      render: (price) => `$${parseFloat(price).toFixed(2)}`,
     },
     {
       title: 'Quantity',
@@ -54,7 +59,7 @@ const CartPage = () => {
     {
       title: 'Total',
       key: 'total',
-      render: (_, record) => `$${(record.price * record.quantity).toFixed(2)}`,
+      render: (_, record) => `$${(parseFloat(record.price) * record.quantity).toFixed(2)}`,
     },
     {
       title: 'Action',
@@ -113,6 +118,7 @@ const CartPage = () => {
               block 
               icon={<CreditCardOutlined />} 
               onClick={handleCheckout}
+              loading={loading}
             >
               Checkout
             </Button>
