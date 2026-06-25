@@ -1,7 +1,7 @@
 // src/pages/admin/AdminProductPage.jsx
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Input, Modal, Form, InputNumber, Select, Tag, message, Popconfirm, Image } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Input, Modal, Form, InputNumber, Select, Tag, message, Popconfirm, Image, Upload } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, UploadOutlined, LoadingOutlined } from '@ant-design/icons';
 import adminService from '../../api/adminService';
 
 const { Option } = Select;
@@ -15,6 +15,26 @@ const AdminProductPage = () => {
   const [form] = Form.useForm();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [searchText, setSearchText] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const handleCustomUpload = async ({ file, onSuccess, onError }) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    setUploading(true);
+    try {
+      const response = await adminService.uploadImage(formData);
+      const url = response.data.secure_url;
+      form.setFieldsValue({ image_url: url });
+      message.success('Image uploaded successfully to Cloudinary');
+      onSuccess(null, file);
+    } catch (error) {
+      console.error(error);
+      message.error(error.response?.data?.message || 'Failed to upload image');
+      onError(error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -109,7 +129,7 @@ const AdminProductPage = () => {
       title: 'Price',
       dataIndex: 'price',
       key: 'price',
-      render: (price) => `$${parseFloat(price).toFixed(2)}`,
+      render: (price) => `Rs. ${parseFloat(price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       sorter: true,
     },
     {
@@ -190,8 +210,21 @@ const AdminProductPage = () => {
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
           </div>
-          <Form.Item name="image_url" label="Image URL">
-            <Input />
+          <Form.Item label="Product Image">
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Upload
+                customRequest={handleCustomUpload}
+                showUploadList={false}
+                accept="image/*"
+              >
+                <Button icon={uploading ? <LoadingOutlined /> : <UploadOutlined />} loading={uploading}>
+                  {uploading ? 'Uploading...' : 'Upload from Device'}
+                </Button>
+              </Upload>
+              <Form.Item name="image_url" noStyle rules={[{ required: true, message: 'Please upload an image or enter a URL' }]}>
+                <Input placeholder="Or enter image URL manually..." />
+              </Form.Item>
+            </Space>
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={4} />

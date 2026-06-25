@@ -10,6 +10,11 @@ const adminService = {
   createProduct: (data) => api.post('/admin/products', data),
   updateProduct: (id, data) => api.put(`/admin/products/${id}`, data),
   deleteProduct: (id) => api.delete(`/admin/products/${id}`),
+  uploadImage: (formData) => api.post('/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }),
   
   // Categories
   getCategories: () => api.get('/admin/categories'),

@@ -5,6 +5,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import api from '../api/api';
 import { CartContext } from '../context/CartContext';
+import { LanguageContext } from '../context/LanguageContext';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -14,6 +15,7 @@ const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useContext(CartContext);
+  const { t } = useContext(LanguageContext);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -53,7 +55,9 @@ const ProductDetailPage = () => {
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Tag color="blue">{product.brand}</Tag>
             <Title level={1} style={{ marginTop: 8 }}>{product.name}</Title>
-            <Text strong style={{ fontSize: 28, color: '#f5222d' }}>${product.price}</Text>
+            <Text strong style={{ fontSize: 28, color: '#f5222d' }}>
+              {t('currencySymbol')}{parseFloat(product.price).toLocaleString('en-IN')}
+            </Text>
             
             <Divider />
             

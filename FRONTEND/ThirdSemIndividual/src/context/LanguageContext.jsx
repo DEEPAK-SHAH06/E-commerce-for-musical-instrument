@@ -7,6 +7,7 @@ const translations = {
   en: {
     hotDeals: 'Hot Deals',
     helpSupport: 'Help & Support',
+    currencySymbol: 'Rs. ',
     languageLabel: 'EN | NPR',
     categories: 'Categories',
     searchPlaceholder: 'What are you looking for?',
@@ -63,6 +64,7 @@ const translations = {
   ne: {
     hotDeals: 'तातो डिलहरू',
     helpSupport: 'मद्दत र समर्थन',
+    currencySymbol: 'रू. ',
     languageLabel: 'ने | रू',
     categories: 'वरिकरणहरू',
     searchPlaceholder: 'तपाईं के खोज्दै हुनुहुन्छ?',

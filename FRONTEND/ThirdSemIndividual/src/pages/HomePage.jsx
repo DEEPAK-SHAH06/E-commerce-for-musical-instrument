@@ -1,5 +1,6 @@
 // src/pages/HomePage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { LanguageContext } from '../context/LanguageContext';
 import { Typography, Row, Col, Card, Button, Spin, Carousel, Space } from 'antd';
 import { Link } from 'react-router-dom';
 import api from '../api/api';
@@ -10,6 +11,7 @@ const HomePage = () => {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useContext(LanguageContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,7 +87,7 @@ const HomePage = () => {
                 cover={<img alt={product.name} src={product.image_url || 'https://via.placeholder.com/300x200?text=No+Image'} style={{ height: 200, objectFit: 'cover' }} />}
                 actions={[
                   <Link to={`/products/${product.id}`} key="view">Details</Link>,
-                  <Text key="price" strong style={{ color: '#f5222d' }}>${product.price}</Text>
+                  <Text key="price" strong style={{ color: '#f5222d' }}>{t('currencySymbol')}{parseFloat(product.price).toLocaleString('en-IN')}</Text>
                 ]}
               >
                 <Card.Meta

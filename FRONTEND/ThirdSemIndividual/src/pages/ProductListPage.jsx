@@ -1,8 +1,9 @@
 // src/pages/ProductListPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Row, Col, Card, Typography, Space, Spin, Select, Slider, Empty, Layout } from 'antd';
 import { useLocation, Link } from 'react-router-dom';
 import api from '../api/api';
+import { LanguageContext } from '../context/LanguageContext';
 
 const { Title, Text } = Typography;
 const { Sider, Content } = Layout;
@@ -11,8 +12,9 @@ const { Option } = Select;
 const ProductListPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [priceRange, setPriceRange] = useState([0, 300000]);
   const [sortBy, setSortBy] = useState('newest');
+  const { t } = useContext(LanguageContext);
   
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -50,14 +52,14 @@ const ProductListPage = () => {
           <Slider
             range
             min={0}
-            max={5000}
-            defaultValue={[0, 5000]}
+            max={300000}
+            defaultValue={[0, 300000]}
             onAfterChange={(value) => setPriceRange(value)}
-            tipFormatter={(value) => `$${value}`}
+            tipFormatter={(value) => `${t('currencySymbol')}${value.toLocaleString('en-IN')}`}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Text>${priceRange[0]}</Text>
-            <Text>${priceRange[1]}</Text>
+            <Text>{t('currencySymbol')}{priceRange[0].toLocaleString('en-IN')}</Text>
+            <Text>{t('currencySymbol')}{priceRange[1].toLocaleString('en-IN')}</Text>
           </div>
         </div>
 
@@ -97,7 +99,9 @@ const ProductListPage = () => {
                     description={
                       <Space direction="vertical" size={0}>
                         <Text type="secondary">{product.brand}</Text>
-                        <Text strong style={{ color: '#f5222d', fontSize: 18 }}>${product.price}</Text>
+                        <Text strong style={{ color: '#f5222d', fontSize: 18 }}>
+                          {t('currencySymbol')}{parseFloat(product.price).toLocaleString('en-IN')}
+                        </Text>
                       </Space>
                     }
                   />

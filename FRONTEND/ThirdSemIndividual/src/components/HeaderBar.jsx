@@ -90,6 +90,7 @@ const HeaderBar = () => {
       }}>
         <div className="logo" style={{ marginRight: '40px', display: 'flex', alignItems: 'center' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
+           
             <div style={{ backgroundColor: '#1890ff', color: '#fff', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold', fontSize: '20px', marginRight: '8px' }}>S</div>
             <Text strong style={{ fontSize: '22px', color: '#fff', letterSpacing: '-0.5px' }}>SOUNDORA</Text>
           </Link>
@@ -123,7 +124,7 @@ const HeaderBar = () => {
               </Badge>
               <div style={{ marginLeft: '12px', display: 'flex', flexDirection: 'column' }}>
                 <Text style={{ color: '#aaa', fontSize: '10px', lineHeight: 1 }}>{t('cart')}</Text>
-                <Text style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>${cartTotal.toFixed(2)}</Text>
+                <Text style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>{t('currencySymbol')}{cartTotal.toFixed(2)}</Text>
               </div>
             </div>
           </Link>
