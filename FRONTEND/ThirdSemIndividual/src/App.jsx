@@ -24,6 +24,9 @@ import AdminProtectedRoute from './components/AdminProtectedRoute';
 
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { LanguageProvider } from './context/LanguageContext';
+import HotDealsPage from './pages/HotDealsPage';
+import HelpSupportPage from './pages/HelpSupportPage';
 import './App.css';
 
 const { Content } = Layout;
@@ -44,51 +47,55 @@ const App = () => (
       },
     }}
   >
-    <AuthProvider>
-      <CartProvider>
-        <Router>
-          <Routes>
-            {/* Admin Routes */}
-            <Route path="/admin/login" element={<AdminLoginPage />} />
-            <Route element={<AdminProtectedRoute />}>
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboardPage />} />
-                <Route path="dashboard" element={<AdminDashboardPage />} />
-                <Route path="products" element={<AdminProductPage />} />
-                <Route path="categories" element={<AdminCategoryPage />} />
-                <Route path="orders" element={<AdminOrderPage />} />
-                <Route path="users" element={<AdminUserPage />} />
-                <Route path="analytics" element={<AdminAnalyticsPage />} />
+    <LanguageProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Router>
+            <Routes>
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route element={<AdminProtectedRoute />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboardPage />} />
+                  <Route path="dashboard" element={<AdminDashboardPage />} />
+                  <Route path="products" element={<AdminProductPage />} />
+                  <Route path="categories" element={<AdminCategoryPage />} />
+                  <Route path="orders" element={<AdminOrderPage />} />
+                  <Route path="users" element={<AdminUserPage />} />
+                  <Route path="analytics" element={<AdminAnalyticsPage />} />
+                </Route>
               </Route>
-            </Route>
 
-            {/* Public Routes */}
-            <Route
-              path="*"
-              element={
-                <Layout style={{ minHeight: '100vh' }}>
-                  <HeaderBar />
-                  <Content style={{ padding: '0 50px' }}>
-                    <Routes>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/products" element={<ProductListPage />} />
-                      <Route path="/products/:id" element={<ProductDetailPage />} />
-                      <Route path="/cart" element={<CartPage />} />
-                      <Route path="/dashboard" element={<DashboardPage />} />
-                    </Routes>
-                  </Content>
-                  <Layout.Footer style={{ textAlign: 'center', background: '#fff', borderTop: '1px solid #f0f0f0', padding: '24px 50px' }}>
-                    MusicStore ©2026 Premium Musical Instruments. All Rights Reserved.
-                  </Layout.Footer>
-                </Layout>
-              }
-            />
-          </Routes>
-        </Router>
-      </CartProvider>
-    </AuthProvider>
+              {/* Public Routes */}
+              <Route
+                path="*"
+                element={
+                  <Layout style={{ minHeight: '100vh' }}>
+                    <HeaderBar />
+                    <Content style={{ padding: '0 50px' }}>
+                      <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/register" element={<RegisterPage />} />
+                        <Route path="/products" element={<ProductListPage />} />
+                        <Route path="/products/:id" element={<ProductDetailPage />} />
+                        <Route path="/cart" element={<CartPage />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/hot-deals" element={<HotDealsPage />} />
+                        <Route path="/help-support" element={<HelpSupportPage />} />
+                      </Routes>
+                    </Content>
+                    <Layout.Footer style={{ textAlign: 'center', background: '#fff', borderTop: '1px solid #f0f0f0', padding: '24px 50px' }}>
+                      MusicStore ©2026 Premium Musical Instruments. All Rights Reserved.
+                    </Layout.Footer>
+                  </Layout>
+                }
+              />
+            </Routes>
+          </Router>
+        </CartProvider>
+      </AuthProvider>
+    </LanguageProvider>
   </ConfigProvider>
 );
 

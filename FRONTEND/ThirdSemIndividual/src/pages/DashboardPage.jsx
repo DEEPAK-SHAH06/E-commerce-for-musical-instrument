@@ -13,19 +13,45 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      // Simulation: fetching orders for the user
-      // Since we haven't implemented order history backend fully yet, 
-      // we'll show a sample or empty state.
-      setLoading(false);
-    }
+    const fetchOrders = async () => {
+      if (user) {
+        try {
+          const response = await api.get('/orders');
+          setOrders(response.data);
+        } catch (error) {
+          console.error('Failed to fetch orders:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchOrders();
   }, [user]);
 
   const orderColumns = [
     { title: 'Order ID', dataIndex: 'id', key: 'id' },
-    { title: 'Date', dataIndex: 'date', key: 'date' },
-    { title: 'Total', dataIndex: 'total', key: 'total', render: (t) => `$${t}` },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s) => <Tag color="blue">{s}</Tag> },
+    { 
+      title: 'Date', 
+      dataIndex: 'date', 
+      key: 'date',
+      render: (d) => new Date(d).toLocaleDateString()
+    },
+    { 
+      title: 'Total', 
+      dataIndex: 'total', 
+      key: 'total', 
+      render: (t) => `$${parseFloat(t).toFixed(2)}` 
+    },
+    { 
+      title: 'Status', 
+      dataIndex: 'status', 
+      key: 'status', 
+      render: (s) => (
+        <Tag color={s === 'Delivered' ? 'green' : s === 'Cancelled' ? 'red' : 'blue'}>
+          {s.toUpperCase()}
+        </Tag>
+      )
+    },
   ];
 
   if (!user) return <div style={{ textAlign: 'center', padding: '100px 0' }}>Please login to view your dashboard</div>;
@@ -48,9 +74,9 @@ const DashboardPage = () => {
                 label: (<span><ShoppingOutlined />My Orders</span>),
                 children: (
                   orders.length > 0 ? (
-                    <Table columns={orderColumns} dataSource={orders} rowKey="id" />
+                    <Table columns={orderColumns} dataSource={orders} rowKey="id" loading={loading} />
                   ) : (
-                    <Empty description="No orders placed yet" />
+                    <Empty description={loading ? "Loading..." : "No orders placed yet"} />
                   )
                 )
               },

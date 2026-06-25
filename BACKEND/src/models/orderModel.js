@@ -3,7 +3,7 @@ const db = require('../config/db');
 
 async function getAllOrders() {
   const query = `
-    SELECT o.*, u.name as user_name, u.email as user_email 
+    SELECT o.*, o.total_amount as total_price, u.name as user_name, u.email as user_email 
     FROM orders o 
     JOIN users u ON o.user_id = u.id 
     ORDER BY o.created_at DESC
@@ -14,13 +14,13 @@ async function getAllOrders() {
 
 async function getOrderById(id) {
   const orderQuery = `
-    SELECT o.*, u.name as user_name, u.email as user_email 
+    SELECT o.*, o.total_amount as total_price, u.name as user_name, u.email as user_email 
     FROM orders o 
     JOIN users u ON o.user_id = u.id 
     WHERE o.id = $1
   `;
   const itemsQuery = `
-    SELECT oi.*, p.name as product_name, p.image_url 
+    SELECT oi.*, oi.unit_price as price, p.name as product_name, p.image_url 
     FROM order_items oi 
     JOIN products p ON oi.product_id = p.id 
     WHERE oi.order_id = $1
@@ -43,6 +43,51 @@ async function updateOrderStatus(id, status) {
   return rows[0];
 }
 
+async function getUserOrders(userId) {
+  const query = `
+    SELECT o.*, o.total_amount as total, o.total_amount as total_price, o.created_at as date
+    FROM orders o 
+    WHERE o.user_id = $1 
+    ORDER BY o.created_at DESC
+  `;
+  const { rows } = await db.query(query);
+  return rows;
+}
+
+async function createOrder(userId, totalAmount, status, items) {
+  const pool = db.getPool();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    const orderQuery = `
+      INSERT INTO orders (user_id, total_amount, status)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `;
+    const orderResult = await client.query(orderQuery, [userId, totalAmount, status]);
+    const order = orderResult.rows[0];
+    
+    const itemQuery = `
+      INSERT INTO order_items (order_id, product_id, quantity, unit_price)
+      VALUES ($1, $2, $3, $4)
+    `;
+    for (const item of items) {
+      await client.query(itemQuery, [order.id, item.id, item.quantity, item.price]);
+      // Update stock
+      await client.query('UPDATE products SET stock = GREATEST(stock - $1, 0) WHERE id = $2', [item.quantity, item.id]);
+    }
+    
+    await client.query('COMMIT');
+    return order;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 async function getDashboardStats() {
   const totalUsers = await db.query('SELECT COUNT(*) FROM users WHERE role = \'user\'');
   const totalProducts = await db.query('SELECT COUNT(*) FROM products');
@@ -50,7 +95,7 @@ async function getDashboardStats() {
   const totalRevenue = await db.query('SELECT COALESCE(SUM(total_amount), 0) as sum FROM orders WHERE status != \'Cancelled\'');
   
   const recentOrders = await db.query(`
-    SELECT o.*, u.name as user_name 
+    SELECT o.*, o.total_amount as total_price, u.name as user_name 
     FROM orders o 
     JOIN users u ON o.user_id = u.id 
     ORDER BY o.created_at DESC 
@@ -91,5 +136,7 @@ module.exports = {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
+  getUserOrders,
+  createOrder,
   getDashboardStats,
 };

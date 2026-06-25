@@ -13,6 +13,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
+import { LanguageContext } from '../context/LanguageContext';
 
 const { Header } = Layout;
 const { Search } = Input;
@@ -21,14 +22,15 @@ const { Text } = Typography;
 const HeaderBar = () => {
   const { user, logout } = useContext(AuthContext);
   const { cartCount, cartTotal } = useContext(CartContext);
+  const { language, setLanguage, t } = useContext(LanguageContext);
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
   const navigate = useNavigate();
 
   const userMenuItems = [
-    { key: 'orders', label: <Link to="/dashboard">My Orders</Link> },
-    { key: 'profile', label: <Link to="/dashboard?tab=profile">Account Settings</Link> },
+    { key: 'orders', label: <Link to="/dashboard">{t('myOrders')}</Link> },
+    { key: 'profile', label: <Link to="/dashboard?tab=profile">{t('accountSettings')}</Link> },
     { type: 'divider' },
-    { key: 'logout', label: <span onClick={() => { logout(); navigate('/'); }}>Sign Out</span> },
+    { key: 'logout', label: <span onClick={() => { logout(); navigate('/'); }}>{t('signOut')}</span> },
   ];
 
   const mainCategories = [
@@ -55,9 +57,25 @@ const HeaderBar = () => {
         borderBottom: '1px solid rgba(255,255,255,0.1)'
       }}>
         <Space size={24} style={{ fontSize: '12px' }}>
-          <Text style={{ color: '#aaa' }}><ThunderboltOutlined /> Hot Deals</Text>
-          <Text style={{ color: '#aaa' }}><QuestionCircleOutlined /> Help & Support</Text>
-          <Text style={{ color: '#aaa' }}><GlobalOutlined /> EN | USD</Text>
+          <Link to="/hot-deals" style={{ color: '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <ThunderboltOutlined /> {t('hotDeals')}
+          </Link>
+          <Link to="/help-support" style={{ color: '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <QuestionCircleOutlined /> {t('helpSupport')}
+          </Link>
+          <Dropdown
+            menu={{
+              items: [
+                { key: 'en', label: 'English', onClick: () => setLanguage('en') },
+                { key: 'ne', label: 'नेपाली (Nepali)', onClick: () => setLanguage('ne') }
+              ]
+            }}
+            placement="bottomRight"
+          >
+            <span style={{ color: '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <GlobalOutlined /> {language === 'en' ? 'English' : 'नेपाली'}
+            </span>
+          </Dropdown>
         </Space>
       </div>
 
@@ -72,14 +90,14 @@ const HeaderBar = () => {
       }}>
         <div className="logo" style={{ marginRight: '40px', display: 'flex', alignItems: 'center' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ backgroundColor: '#1890ff', color: '#fff', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold', fontSize: '20px', marginRight: '8px' }}>T</div>
-            <Text strong style={{ fontSize: '22px', color: '#fff', letterSpacing: '-0.5px' }}>THOMANN</Text>
+            <div style={{ backgroundColor: '#1890ff', color: '#fff', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold', fontSize: '20px', marginRight: '8px' }}>S</div>
+            <Text strong style={{ fontSize: '22px', color: '#fff', letterSpacing: '-0.5px' }}>SOUNDORA</Text>
           </Link>
         </div>
 
         <div style={{ flex: 1, maxWidth: '800px' }}>
           <Search
-            placeholder="What are you looking for?"
+            placeholder={t('searchPlaceholder')}
             onSearch={(value) => navigate(`/products?search=${value}`)}
             size="large"
             enterButton
@@ -94,7 +112,7 @@ const HeaderBar = () => {
               onClick={() => !user && navigate('/login')}
             >
               <UserOutlined style={{ fontSize: '22px' }} />
-              <Text style={{ color: '#fff', fontSize: '11px', marginTop: '2px' }}>{user ? 'Account' : 'Sign In'}</Text>
+              <Text style={{ color: '#fff', fontSize: '11px', marginTop: '2px' }}>{user ? t('account') : t('signIn')}</Text>
             </div>
           </Dropdown>
 
@@ -104,7 +122,7 @@ const HeaderBar = () => {
                 <ShoppingCartOutlined style={{ fontSize: '24px', color: '#fff' }} />
               </Badge>
               <div style={{ marginLeft: '12px', display: 'flex', flexDirection: 'column' }}>
-                <Text style={{ color: '#aaa', fontSize: '10px', lineHeight: 1 }}>Cart</Text>
+                <Text style={{ color: '#aaa', fontSize: '10px', lineHeight: 1 }}>{t('cart')}</Text>
                 <Text style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>${cartTotal.toFixed(2)}</Text>
               </div>
             </div>
@@ -128,7 +146,7 @@ const HeaderBar = () => {
           style={{ marginRight: '16px', fontWeight: 'bold' }}
           onClick={() => setMobileMenuVisible(true)}
         >
-          Categories
+          {t('categories')}
         </Button>
 
         <Menu
@@ -142,7 +160,7 @@ const HeaderBar = () => {
       </div>
 
       <Drawer
-        title="Browse Categories"
+        title={t('categories')}
         placement="left"
         onClose={() => setMobileMenuVisible(false)}
         open={mobileMenuVisible}
