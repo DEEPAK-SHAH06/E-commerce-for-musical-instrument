@@ -23,7 +23,7 @@ const HomePage = () => {
         // Handle both old format (array) and new format { products: [], total: 0 }
         const productsData = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data.products;
         setProducts(productsData || []);
-        setCategories(catRes.data.slice(0, 8)); // Show top 8 categories
+        setCategories(catRes.data || []); // Show all categories dynamically
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -36,14 +36,14 @@ const HomePage = () => {
   return (
     <div className="fade-in">
       {/* Hero Section */}
-      <Carousel autoplay className="hero-carousel" style={{ marginBottom: 60, borderRadius: 12, overflow: 'hidden' }}>
+      <Carousel autoplay className="hero-carousel" style={{ marginBottom: 1, borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=1200)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <div className="hero-overlay">
             <Title level={1} style={{ color: '#fff', fontSize: '48px', marginBottom: '16px' }}>Master Your Craft</Title>
-            <Text style={{ color: '#fff', fontSize: '20px', marginBottom: '32px', maxWidth: '600px', textAlign: 'center' }}>
+            <Text style={{ color: '#fff', fontSize: '20px', marginBottom: '60px', maxWidth: '600px', textAlign: 'center' }}>
               Explore our curated collection of professional-grade musical instruments.
             </Text>
-            <Button type="primary" size="large" style={{ height: '48px', padding: '0 32px', fontSize: '18px' }}>
+            <Button type="primary" size="large" style={{ height: '48px', padding: '0 32px', fontSize: '16px' }}>
               <Link to="/products">Shop Collections</Link>
             </Button>
           </div>

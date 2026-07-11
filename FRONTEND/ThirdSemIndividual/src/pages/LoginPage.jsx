@@ -2,7 +2,7 @@
 import React, { useState, useContext } from 'react';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const { Title } = Typography;
@@ -11,13 +11,15 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || '/';
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
       await login(values.email, values.password);
       message.success('Login successful!');
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (error) {
       message.error(error.response?.data?.message || 'Login failed');
     } finally {
@@ -42,6 +44,9 @@ const LoginPage = () => {
           >
             <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
           </Form.Item>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </div>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading} block size="large">
               Log in

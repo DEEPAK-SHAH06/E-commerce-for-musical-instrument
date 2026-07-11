@@ -23,6 +23,7 @@ const categoryRouter = require('./routes/categoryRoutes');
 const adminRouter = require('./routes/adminRoutes');
 const orderRouter = require('./routes/orderRoutes');
 const uploadRouter = require('./routes/uploadRoutes');
+const paymentRouter = require('./routes/paymentRoutes');
 
 app.use('/api/auth', authRouter);
 app.use('/api/products', productRouter);
@@ -30,6 +31,7 @@ app.use('/api/categories', categoryRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/payment', paymentRouter);
 const PORT = process.env.PORT || 5001;
 
 const startServer = async () => {

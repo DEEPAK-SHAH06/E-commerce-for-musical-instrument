@@ -59,7 +59,7 @@ const AdminOrderPage = () => {
       title: 'Total',
       dataIndex: 'total_price',
       key: 'total_price',
-      render: (price) => `$${parseFloat(price).toFixed(2)}`,
+      render: (price) => `Rs. ${parseFloat(price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     },
     {
       title: 'Status',
@@ -129,18 +129,18 @@ const AdminOrderPage = () => {
               dataSource={selectedOrder.items}
               renderItem={(item) => (
                 <List.Item
-                  extra={<div>{item.quantity} x ${parseFloat(item.price).toFixed(2)}</div>}
+                  extra={<div>{item.quantity} x Rs. {parseFloat(item.price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>}
                 >
                   <List.Item.Meta
                     avatar={<Avatar src={item.image_url} shape="square" size={64} />}
                     title={item.product_name}
-                    description={`Price: $${parseFloat(item.price).toFixed(2)}`}
+                    description={`Price: Rs. ${parseFloat(item.price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   />
                 </List.Item>
               )}
             />
             <div style={{ textAlign: 'right', marginTop: 16, fontSize: '18px', fontWeight: 'bold' }}>
-              Total: ${parseFloat(selectedOrder.total_price).toFixed(2)}
+              Total: Rs. {parseFloat(selectedOrder.total_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
         )}

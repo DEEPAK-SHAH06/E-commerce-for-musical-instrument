@@ -50,22 +50,35 @@ async function getUserOrders(userId) {
     WHERE o.user_id = $1 
     ORDER BY o.created_at DESC
   `;
-  const { rows } = await db.query(query);
-  return rows;
+  const { rows: orders } = await db.query(query, [userId]);
+  
+  const itemsQuery = `
+    SELECT oi.*, oi.unit_price as price, p.name as product_name, p.image_url 
+    FROM order_items oi 
+    JOIN products p ON oi.product_id = p.id 
+    WHERE oi.order_id = $1
+  `;
+  
+  for (const order of orders) {
+    const { rows: items } = await db.query(itemsQuery, [order.id]);
+    order.items = items;
+  }
+  
+  return orders;
 }
 
-async function createOrder(userId, totalAmount, status, items) {
+async function createOrder(userId, totalAmount, status, items, paymentMethod = 'COD', paymentStatus = 'PENDING') {
   const pool = db.getPool();
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     
     const orderQuery = `
-      INSERT INTO orders (user_id, total_amount, status)
-      VALUES ($1, $2, $3)
+      INSERT INTO orders (user_id, total_amount, status, payment_method, payment_status)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
     `;
-    const orderResult = await client.query(orderQuery, [userId, totalAmount, status]);
+    const orderResult = await client.query(orderQuery, [userId, totalAmount, status, paymentMethod, paymentStatus]);
     const order = orderResult.rows[0];
     
     const itemQuery = `
@@ -93,6 +106,15 @@ async function getDashboardStats() {
   const totalProducts = await db.query('SELECT COUNT(*) FROM products');
   const totalOrders = await db.query('SELECT COUNT(*) FROM orders');
   const totalRevenue = await db.query('SELECT COALESCE(SUM(total_amount), 0) as sum FROM orders WHERE status != \'Cancelled\'');
+  
+  const cancelledOrdersResult = await db.query('SELECT COUNT(*) FROM orders WHERE status = \'Cancelled\'');
+  const cancelledOrders = parseInt(cancelledOrdersResult.rows[0].count, 10);
+
+  const totalItemsSoldResult = await db.query('SELECT COALESCE(SUM(quantity), 0) as sum FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE o.status != \'Cancelled\'');
+  const totalItemsSold = parseInt(totalItemsSoldResult.rows[0].sum, 10);
+
+  const newCustomersResult = await db.query(`SELECT COUNT(*) FROM users WHERE role = 'user' AND created_at >= date_trunc('month', CURRENT_DATE)`);
+  const newCustomers = parseInt(newCustomersResult.rows[0].count, 10);
   
   const recentOrders = await db.query(`
     SELECT o.*, o.total_amount as total_price, u.name as user_name 
@@ -124,12 +146,27 @@ async function getDashboardStats() {
       totalUsers: parseInt(totalUsers.rows[0].count),
       totalProducts: parseInt(totalProducts.rows[0].count),
       totalOrders: parseInt(totalOrders.rows[0].count),
-      totalRevenue: parseFloat(totalRevenue.rows[0].sum)
+      totalRevenue: parseFloat(totalRevenue.rows[0].sum),
+      cancelledOrders,
+      totalItemsSold,
+      newCustomers
     },
     recentOrders: recentOrders.rows,
-    salesByDay: salesByDay.rows || [],
-    salesByCategory: salesByCategory.rows || []
+    salesByDay: (salesByDay.rows || []).map(row => ({
+      ...row,
+      revenue: parseFloat(row.revenue)
+    })),
+    salesByCategory: (salesByCategory.rows || []).map(row => ({
+      ...row,
+      count: parseInt(row.count, 10)
+    }))
   };
+}
+
+async function updateOrderPaymentStatus(orderId, paymentStatus, orderStatus) {
+  const query = 'UPDATE orders SET payment_status = $1, status = $2, updated_at = NOW() WHERE id = $3 RETURNING *';
+  const { rows } = await db.query(query, [paymentStatus, orderStatus, orderId]);
+  return rows[0];
 }
 
 module.exports = {
@@ -139,4 +176,5 @@ module.exports = {
   getUserOrders,
   createOrder,
   getDashboardStats,
+  updateOrderPaymentStatus,
 };

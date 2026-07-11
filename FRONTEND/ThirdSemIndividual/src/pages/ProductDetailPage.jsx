@@ -1,11 +1,12 @@
 // src/pages/ProductDetailPage.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { Row, Col, Typography, Button, Space, InputNumber, Divider, Card, Tag, message, Breadcrumb } from 'antd';
-import { useParams, Link } from 'react-router-dom';
-import { ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ShoppingCartOutlined, ArrowLeftOutlined, CreditCardOutlined } from '@ant-design/icons';
 import api from '../api/api';
 import { CartContext } from '../context/CartContext';
 import { LanguageContext } from '../context/LanguageContext';
+import { AuthContext } from '../context/AuthContext';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -16,6 +17,20 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useContext(CartContext);
   const { t } = useContext(LanguageContext);
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const handleBuyNow = () => {
+    if (!user) {
+      message.warning('Please log in to purchase this product.');
+      navigate('/login', { state: { from: `/products/${id}` } });
+      return;
+    }
+    
+    // Add to cart and redirect to checkout
+    addToCart(product, quantity);
+    navigate('/cart', { state: { checkout: true } });
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -69,7 +84,7 @@ const ProductDetailPage = () => {
             <Space size="large" align="center">
               <InputNumber min={1} max={99} defaultValue={1} value={quantity} onChange={setQuantity} size="large" />
               <Button 
-                type="primary" 
+                type="default" 
                 size="large" 
                 icon={<ShoppingCartOutlined />} 
                 onClick={() => {
@@ -78,6 +93,15 @@ const ProductDetailPage = () => {
                 }}
               >
                 Add to Cart
+              </Button>
+              <Button 
+                type="primary" 
+                size="large" 
+                icon={<CreditCardOutlined />} 
+                onClick={handleBuyNow}
+                style={{ background: '#52c41a', borderColor: '#52c41a' }}
+              >
+                Buy Now
               </Button>
             </Space>
 

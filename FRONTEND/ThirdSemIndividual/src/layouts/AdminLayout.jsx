@@ -76,7 +76,7 @@ const AdminLayout = () => {
     <Layout style={{ minHeight: '100vh' }}>
       <Sider trigger={null} collapsible collapsed={collapsed} theme="light" style={{ borderRight: '1px solid #f0f0f0' }}>
         <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 18, color: '#1890ff' }}>
-          {collapsed ? 'MS' : 'MusicStore Admin'}
+          {collapsed ? 'SA' : 'Soundora Admin'}
         </div>
         <Menu
           theme="light"

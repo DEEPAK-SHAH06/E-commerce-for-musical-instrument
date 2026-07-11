@@ -1,12 +1,13 @@
 // src/pages/admin/AdminCategoryPage.jsx
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Input, Modal, Form, message, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Input, Modal, Form, message, Popconfirm, Upload } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, LoadingOutlined } from '@ant-design/icons';
 import adminService from '../../api/adminService';
 
 const AdminCategoryPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [form] = Form.useForm();
@@ -24,6 +25,24 @@ const AdminCategoryPage = () => {
       message.error('Failed to fetch categories');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCustomUpload = async ({ file, onSuccess, onError }) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    setUploading(true);
+    try {
+      const response = await adminService.uploadImage(formData);
+      form.setFieldsValue({ image_url: response.data.secure_url });
+      message.success('Image uploaded successfully to Cloudinary');
+      onSuccess(response.data);
+    } catch (error) {
+      console.error(error);
+      message.error(error.response?.data?.message || 'Failed to upload image');
+      onError(error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -67,7 +86,18 @@ const AdminCategoryPage = () => {
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'id', key: 'id' },
+    { 
+      title: 'Cover Image', 
+      dataIndex: 'image_url', 
+      key: 'image_url',
+      render: (url) => (
+        <img 
+          src={url || 'https://via.placeholder.com/80x50?text=No+Image'} 
+          alt="Category" 
+          style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 4, border: '1px solid #f0f0f0' }} 
+        />
+      )
+    },
     { title: 'Name', dataIndex: 'name', key: 'name', sorter: (a, b) => a.name.localeCompare(b.name) },
     { title: 'Description', dataIndex: 'description', key: 'description' },
     {
@@ -104,13 +134,30 @@ const AdminCategoryPage = () => {
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
+        destroyOnClose
       >
-        <Form form={form} layout="vertical" name="categoryForm">
+        <Form form={form} layout="vertical" name="categoryForm" initialValues={{ image_url: '' }}>
           <Form.Item name="name" label="Category Name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item label="Category Cover Image">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Upload
+                customRequest={handleCustomUpload}
+                showUploadList={false}
+                accept="image/*"
+              >
+                <Button icon={uploading ? <LoadingOutlined /> : <UploadOutlined />} loading={uploading}>
+                  {uploading ? 'Uploading...' : 'Upload Cover Image'}
+                </Button>
+              </Upload>
+              <Form.Item name="image_url">
+                <Input placeholder="Or paste image URL here" />
+              </Form.Item>
+            </div>
           </Form.Item>
         </Form>
       </Modal>

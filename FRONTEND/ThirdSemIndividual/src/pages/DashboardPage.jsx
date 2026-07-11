@@ -1,14 +1,16 @@
 // src/pages/DashboardPage.jsx
 import React, { useContext, useState, useEffect } from 'react';
-import { Typography, Card, Tabs, Table, Tag, Descriptions, Avatar, Space, Empty } from 'antd';
+import { Typography, Card, Tabs, Table, Tag, Descriptions, Avatar, Empty, Space, Button, Popconfirm, message, Row, Col } from 'antd';
 import { UserOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
 import api from '../api/api';
 
 const { Title, Text } = Typography;
 
 const DashboardPage = () => {
   const { user } = useContext(AuthContext);
+  const { t } = useContext(LanguageContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,8 +30,24 @@ const DashboardPage = () => {
     fetchOrders();
   }, [user]);
 
+  const handleCancelOrder = async (orderId) => {
+    try {
+      await api.put(`/orders/${orderId}/cancel`);
+      message.success('Order cancelled successfully');
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'Cancelled' } : o));
+    } catch (error) {
+      console.error('Failed to cancel order:', error);
+      message.error(error.response?.data?.message || 'Failed to cancel order');
+    }
+  };
+
   const orderColumns = [
-    { title: 'Order ID', dataIndex: 'id', key: 'id' },
+    { 
+      title: 'Order ID', 
+      dataIndex: 'id', 
+      key: 'id',
+      render: (id) => <code>#{id.substring(0, 8).toUpperCase()}</code>
+    },
     { 
       title: 'Date', 
       dataIndex: 'date', 
@@ -40,19 +58,99 @@ const DashboardPage = () => {
       title: 'Total', 
       dataIndex: 'total', 
       key: 'total', 
-      render: (t) => `$${parseFloat(t).toFixed(2)}` 
+      render: (total) => `${t('currencySymbol')}${parseFloat(total).toLocaleString('en-IN')}`
     },
     { 
       title: 'Status', 
       dataIndex: 'status', 
       key: 'status', 
-      render: (s) => (
-        <Tag color={s === 'Delivered' ? 'green' : s === 'Cancelled' ? 'red' : 'blue'}>
-          {s.toUpperCase()}
-        </Tag>
-      )
+      render: (s) => {
+        // Map 'Pending' to 'Ordered' (or uppercase) for a more professional look
+        const displayStatus = s === 'Pending' ? 'Ordered' : s;
+        const colorMap = {
+          'Delivered': 'green',
+          'Cancelled': 'red',
+          'Pending': 'orange',
+          'Ordered': 'blue',
+          'Processing': 'blue',
+          'Shipped': 'cyan'
+        };
+        return (
+          <Tag color={colorMap[displayStatus] || 'blue'}>
+            {displayStatus.toUpperCase()}
+          </Tag>
+        );
+      }
     },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, order) => {
+        // Use order.date (from get user orders query) or fallback to created_at
+        const orderDate = new Date(order.date || order.created_at);
+        const now = new Date();
+        const diffMinutes = (now - orderDate) / (1000 * 60);
+        
+        // Cancellable if within 30 mins and not already cancelled or delivered
+        const isCancellable = diffMinutes <= 30 && order.status !== 'Cancelled' && order.status !== 'Delivered';
+
+        return isCancellable ? (
+          <Popconfirm
+            title="Are you sure you want to cancel this order?"
+            onConfirm={() => handleCancelOrder(order.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button type="primary" danger size="small">Cancel Order</Button>
+          </Popconfirm>
+        ) : null;
+      }
+    }
   ];
+
+  const expandedRowRender = (order) => {
+    const itemColumns = [
+      {
+        title: 'Image',
+        dataIndex: 'image_url',
+        key: 'image_url',
+        render: (url, record) => (
+          <img src={url || 'https://via.placeholder.com/40'} alt={record.product_name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
+        )
+      },
+      {
+        title: 'Product Name',
+        dataIndex: 'product_name',
+        key: 'product_name',
+      },
+      {
+        title: 'Unit Price',
+        dataIndex: 'price',
+        key: 'price',
+        render: (price) => `${t('currencySymbol')}${parseFloat(price).toLocaleString('en-IN')}`
+      },
+      {
+        title: 'Quantity',
+        dataIndex: 'quantity',
+        key: 'quantity',
+      },
+      {
+        title: 'Total',
+        key: 'total',
+        render: (_, record) => `${t('currencySymbol')}${(parseFloat(record.price) * record.quantity).toLocaleString('en-IN')}`
+      }
+    ];
+
+    return (
+      <Table
+        columns={itemColumns}
+        dataSource={order.items || []}
+        pagination={false}
+        rowKey="id"
+        size="small"
+      />
+    );
+  };
 
   if (!user) return <div style={{ textAlign: 'center', padding: '100px 0' }}>Please login to view your dashboard</div>;
 
@@ -71,10 +169,19 @@ const DashboardPage = () => {
             <Tabs defaultActiveKey="orders" items={[
               {
                 key: 'orders',
-                label: (<span><ShoppingOutlined />My Orders</span>),
+                label: (<span><ShoppingOutlined />{t('myOrders')}</span>),
                 children: (
                   orders.length > 0 ? (
-                    <Table columns={orderColumns} dataSource={orders} rowKey="id" loading={loading} />
+                    <Table 
+                      columns={orderColumns} 
+                      dataSource={orders} 
+                      rowKey="id" 
+                      loading={loading} 
+                      expandable={{
+                        expandedRowRender,
+                        defaultExpandAllRows: false
+                      }}
+                    />
                   ) : (
                     <Empty description={loading ? "Loading..." : "No orders placed yet"} />
                   )
@@ -98,17 +205,5 @@ const DashboardPage = () => {
     </div>
   );
 };
-
-// Simple Row/Col wrapper for the page layout
-const Row = ({ children, gutter }) => <div style={{ display: 'flex', flexWrap: 'wrap', margin: `0 -${gutter/2}px` }}>{children}</div>;
-const Col = ({ children, xs, md }) => (
-  <div style={{ 
-    padding: '0 12px', 
-    width: window.innerWidth < 768 ? '100%' : `${(md / 24) * 100}%`,
-    boxSizing: 'border-box'
-  }}>
-    {children}
-  </div>
-);
 
 export default DashboardPage;

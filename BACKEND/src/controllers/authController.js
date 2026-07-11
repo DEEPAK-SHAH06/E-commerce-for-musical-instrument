@@ -63,4 +63,49 @@ const adminLogin = async (req, res) => {
   }
 };
 
-module.exports = { register, login, adminLogin };
+const crypto = require('crypto');
+const emailService = require('../services/emailService');
+
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await userModel.findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: 'User with this email does not exist' });
+    }
+
+    const token = crypto.randomBytes(20).toString('hex');
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+
+    await userModel.setResetToken(email, token, expires);
+
+    // Front-end URL
+    const resetLink = `http://localhost:5173/reset-password/${token}`;
+
+    await emailService.sendPasswordResetEmail(user.email, user.name, resetLink);
+
+    res.json({ message: 'Password reset link sent successfully!' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ message: 'Server error during forgot password' });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+  try {
+    const user = await userModel.findUserByResetToken(token);
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired password reset token' });
+    }
+
+    await userModel.updateUserPassword(user.id, password);
+
+    res.json({ message: 'Password reset successfully!' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ message: 'Server error during password reset' });
+  }
+};
+
+module.exports = { register, login, adminLogin, forgotPassword, resetPassword };

@@ -1,5 +1,5 @@
 // src/components/HeaderBar.jsx
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Layout, Menu, Input, Badge, Dropdown, Space, Typography, Button, Drawer } from 'antd';
 import { 
   ShoppingCartOutlined, 
@@ -14,6 +14,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { LanguageContext } from '../context/LanguageContext';
+import api from '../api/api';
 
 const { Header } = Layout;
 const { Search } = Input;
@@ -24,6 +25,7 @@ const HeaderBar = () => {
   const { cartCount, cartTotal } = useContext(CartContext);
   const { language, setLanguage, t } = useContext(LanguageContext);
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+  const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
 
   const userMenuItems = [
@@ -33,16 +35,27 @@ const HeaderBar = () => {
     { key: 'logout', label: <span onClick={() => { logout(); navigate('/'); }}>{t('signOut')}</span> },
   ];
 
-  const mainCategories = [
-    { key: 'electric-guitars', label: 'Electric Guitars', path: '/products?categoryName=Electric Guitars' },
-    { key: 'acoustic-guitars', label: 'Acoustic Guitars', path: '/products?categoryName=Acoustic Guitars' },
-    { key: 'bass-guitars', label: 'Bass Guitars', path: '/products?categoryName=Bass Guitars' },
-    { key: 'pianos', label: 'Digital Pianos', path: '/products?categoryName=Digital Pianos' },
-    { key: 'synthesizers', label: 'Synthesizers', path: '/products?categoryName=Synthesizers' },
-    { key: 'drums', label: 'Drum Kits', path: '/products?categoryName=Drum Kits' },
-    { key: 'cymbals', label: 'Cymbals', path: '/products?categoryName=Cymbals' },
-    { key: 'violins', label: 'Violins', path: '/products?categoryName=Violins' },
-  ];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/categories');
+        setCategories(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch categories in HeaderBar:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const categoryItems = categories.map(cat => ({
+    key: cat.id || cat.name,
+    label: <Link to={`/products?categoryName=${cat.name}`} style={{ fontWeight: 500 }}>{cat.name}</Link>
+  }));
+
+  const drawerCategoryItems = categories.map(cat => ({
+    key: cat.id || cat.name,
+    label: <Link to={`/products?categoryName=${cat.name}`} onClick={() => setMobileMenuVisible(false)}>{cat.name}</Link>
+  }));
 
   return (
     <div style={{ position: 'sticky', zIndex: 1000, width: '100%', top: 0 }}>
@@ -90,8 +103,7 @@ const HeaderBar = () => {
       }}>
         <div className="logo" style={{ marginRight: '40px', display: 'flex', alignItems: 'center' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
-           
-            <div style={{ backgroundColor: '#1890ff', color: '#fff', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold', fontSize: '20px', marginRight: '8px' }}>S</div>
+            <img src="/images/Designer.png" alt="Soundora Logo" style={{ height: '40px', marginRight: '8px', objectFit: 'contain' }} />
             <Text strong style={{ fontSize: '22px', color: '#fff', letterSpacing: '-0.5px' }}>SOUNDORA</Text>
           </Link>
         </div>
@@ -153,10 +165,7 @@ const HeaderBar = () => {
         <Menu
           mode="horizontal"
           style={{ flex: 1, border: 'none', height: '43px', lineHeight: '43px' }}
-          items={mainCategories.map(cat => ({
-            key: cat.key,
-            label: <Link to={cat.path} style={{ fontWeight: 500 }}>{cat.label}</Link>
-          }))}
+          items={categoryItems}
         />
       </div>
 
@@ -168,10 +177,7 @@ const HeaderBar = () => {
       >
         <Menu
           mode="vertical"
-          items={mainCategories.map(cat => ({
-            key: cat.key,
-            label: <Link to={cat.path} onClick={() => setMobileMenuVisible(false)}>{cat.label}</Link>
-          }))}
+          items={drawerCategoryItems}
         />
       </Drawer>
     </div>

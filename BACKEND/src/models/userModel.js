@@ -39,10 +39,35 @@ async function deleteUser(id) {
   return rows[0];
 }
 
+// Set password reset token
+async function setResetToken(email, token, expires) {
+  const query = 'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE email = $3 RETURNING *';
+  const { rows } = await db.query(query, [token, expires, email]);
+  return rows[0];
+}
+
+// Find user by reset token
+async function findUserByResetToken(token) {
+  const query = 'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()';
+  const { rows } = await db.query(query, [token]);
+  return rows[0];
+}
+
+// Update user password and clear token
+async function updateUserPassword(userId, newPassword) {
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  const query = 'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2 RETURNING *';
+  const { rows } = await db.query(query, [passwordHash, userId]);
+  return rows[0];
+}
+
 module.exports = {
   createUser,
   findUserByEmail,
   findUserById,
   getAllUsers,
   deleteUser,
+  setResetToken,
+  findUserByResetToken,
+  updateUserPassword,
 };

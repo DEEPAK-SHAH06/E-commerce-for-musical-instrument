@@ -19,6 +19,7 @@
 
 .section-title {
   position: relative;
+  margin-top: 24px !important;
   margin-bottom: 40px;
   padding-bottom: 12px;
 }
@@ -37,6 +38,11 @@
 .hero-carousel .slick-slide {
   height: 500px;
   overflow: hidden;
+}
+
+.hero-carousel .slick-slide > div,
+.hero-carousel .slick-slide > div > div {
+  height: 100%;
 }
 
 .hero-overlay {

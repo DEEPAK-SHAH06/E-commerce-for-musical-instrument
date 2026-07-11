@@ -11,16 +11,16 @@ async function getCategoryById(id) {
   return rows[0];
 }
 
-async function createCategory({ name, description }) {
-  const query = 'INSERT INTO categories (name, description) VALUES ($1, $2) RETURNING *';
-  const values = [name, description];
+async function createCategory({ name, description, image_url }) {
+  const query = 'INSERT INTO categories (name, description, image_url) VALUES ($1, $2, $3) RETURNING *';
+  const values = [name, description, image_url];
   const { rows } = await db.query(query, values);
   return rows[0];
 }
 
-async function updateCategory(id, { name, description }) {
-  const query = 'UPDATE categories SET name = $1, description = $2 WHERE id = $3 RETURNING *';
-  const values = [name, description, id];
+async function updateCategory(id, { name, description, image_url }) {
+  const query = 'UPDATE categories SET name = $1, description = $2, image_url = $3, updated_at = NOW() WHERE id = $4 RETURNING *';
+  const values = [name, description, image_url, id];
   const { rows } = await db.query(query, values);
   return rows[0];
 }

@@ -90,26 +90,30 @@ const AdminAnalyticsPage = () => {
                   <Card size="small" style={{ marginBottom: 16 }}>
                     <Typography.Text type="secondary">Avg. Order Value</Typography.Text>
                     <Title level={4}>
-                      ${(stats?.summary?.totalRevenue / (stats?.summary?.totalOrders || 1)).toFixed(2)}
+                      Rs. {(stats?.summary?.totalRevenue / (stats?.summary?.totalOrders || 1)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Title>
                   </Card>
                 </Col>
                 <Col span={12}>
                   <Card size="small" style={{ marginBottom: 16 }}>
-                    <Typography.Text type="secondary">Customer Growth</Typography.Text>
-                    <Title level={4}>+12%</Title>
+                    <Typography.Text type="secondary">New Customers (This Month)</Typography.Text>
+                    <Title level={4}>+{stats?.summary?.newCustomers || 0}</Title>
                   </Card>
                 </Col>
                 <Col span={12}>
                   <Card size="small">
-                    <Typography.Text type="secondary">Conversion Rate</Typography.Text>
-                    <Title level={4}>3.5%</Title>
+                    <Typography.Text type="secondary">Total Items Sold</Typography.Text>
+                    <Title level={4}>{stats?.summary?.totalItemsSold || 0}</Title>
                   </Card>
                 </Col>
                 <Col span={12}>
                   <Card size="small">
-                    <Typography.Text type="secondary">Refund Rate</Typography.Text>
-                    <Title level={4}>0.8%</Title>
+                    <Typography.Text type="secondary">Cancellation Rate</Typography.Text>
+                    <Title level={4}>
+                      {stats?.summary?.totalOrders > 0 
+                        ? ((stats?.summary?.cancelledOrders / stats?.summary?.totalOrders) * 100).toFixed(1) 
+                        : '0.0'}%
+                    </Title>
                   </Card>
                 </Col>
               </Row>

@@ -52,7 +52,7 @@ const AdminDashboardPage = () => {
       title: 'Total',
       dataIndex: 'total_price',
       key: 'total_price',
-      render: (text) => `$${parseFloat(text).toFixed(2)}`,
+      render: (text) => `Rs. ${parseFloat(text).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     },
     {
       title: 'Status',
@@ -114,7 +114,7 @@ const AdminDashboardPage = () => {
               title="Total Revenue"
               value={stats?.summary?.totalRevenue}
               precision={2}
-              prefix={<DollarOutlined style={{ color: '#f5222d' }} />}
+              prefix={<span style={{ color: '#f5222d', marginRight: 4, fontWeight: 'bold' }}>Rs.</span>}
             />
           </Card>
         </Col>
