@@ -17,13 +17,19 @@ const PaymentSuccessPage = () => {
 
   useEffect(() => {
     const verify = async () => {
-      const gateway = searchParams.get('gateway');
-      
       try {
+        let gateway = searchParams.get('gateway');
+        let data = searchParams.get('data');
+
+        // Handle eSewa malformed URL issue where it appends ?data= instead of &data=
+        if (gateway && gateway.startsWith('esewa?data=')) {
+          data = gateway.split('esewa?data=')[1];
+          gateway = 'esewa';
+        }
+
         let payload = { gateway };
 
         if (gateway === 'esewa') {
-          const data = searchParams.get('data');
           if (!data) {
             throw new Error('eSewa transaction data is missing');
           }

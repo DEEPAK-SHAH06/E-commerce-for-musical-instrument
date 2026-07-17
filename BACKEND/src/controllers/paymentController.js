@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 const orderModel = require('../models/orderModel');
 
-const ESEWA_SECRET_KEY = process.env.ESEWA_SECRET_KEY || '8g8M8PlwO2258sa7'; // Standard public test secret
+const ESEWA_SECRET_KEY = process.env.ESEWA_SECRET_KEY || '8gBm/:&EnhH.1/q'; // Standard public test secret
 const ESEWA_PRODUCT_CODE = process.env.ESEWA_PRODUCT_CODE || 'EPAYTEST';
 const KHALTI_SECRET_KEY = process.env.KHALTI_SECRET_KEY || 'key_live_secret_a07ceef8d80f4f9db2460ea8d33d9f37'; // Placeholder or fallback test key
 
@@ -16,6 +16,23 @@ function generateEsewaSignature(totalAmount, transactionUuid, productCode) {
   hmac.update(message);
   return hmac.digest('base64');
 }
+
+/**
+ * Verify eSewa Response Signature
+ */
+function verifyEsewaResponseSignature(decodedParams) {
+  if (!decodedParams || !decodedParams.signed_field_names) return false;
+  
+  const fields = decodedParams.signed_field_names.split(',');
+  const message = fields.map(field => `${field}=${decodedParams[field] || ''}`).join(',');
+  
+  const hmac = crypto.createHmac('sha256', ESEWA_SECRET_KEY);
+  hmac.update(message);
+  const expectedSignature = hmac.digest('base64');
+  
+  return expectedSignature === decodedParams.signature;
+}
+
 
 /**
  * Initiate eSewa Payment - Generates credentials & signed params for form submission
@@ -41,7 +58,7 @@ const initiateEsewa = async (req, res) => {
       product_code: ESEWA_PRODUCT_CODE,
       transaction_uuid: order.id,
       success_url: 'http://localhost:5173/payment-success?gateway=esewa',
-      failure_url: 'http://localhost:5173/cart',
+      failure_url: `http://localhost:5173/cart?payment_failed=true&orderId=${order.id}`,
       signed_field_names: 'total_amount,transaction_uuid,product_code',
       signature: signature
     };
@@ -140,10 +157,10 @@ const verifyPayment = async (req, res) => {
       const totalAmount = decodedParams.total_amount;
       const status = decodedParams.status;
 
-      // Verify signature locally
-      const localSignature = generateEsewaSignature(totalAmount, orderId, ESEWA_PRODUCT_CODE);
+      // Verify signature locally based on signed_field_names returned by eSewa
+      const isValidSignature = verifyEsewaResponseSignature(decodedParams);
       
-      if (status === 'COMPLETE' && localSignature === decodedParams.signature) {
+      if (status === 'COMPLETE' && isValidSignature) {
         paymentVerified = true;
       }
     } else if (gateway === 'khalti') {

@@ -29,7 +29,7 @@ const ProductDetailPage = () => {
     
     // Add to cart and redirect to checkout
     addToCart(product, quantity);
-    navigate('/cart', { state: { checkout: true } });
+    navigate('/cart', { state: { checkout: true, selectedItemId: product.id } });
   };
 
   useEffect(() => {

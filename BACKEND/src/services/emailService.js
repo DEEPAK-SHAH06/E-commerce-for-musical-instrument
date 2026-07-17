@@ -31,15 +31,12 @@ async function sendEmail({ to, subject, html, text }) {
     html
   };
 
-  // Check if SMTP is configured with actual values (not placeholder)
-  const isSmtpConfigured = 
-    process.env.EMAIL_HOST_PASSWORD && 
-    process.env.EMAIL_HOST_PASSWORD !== 'gmrtmwpkwfimelxn';
+  // Check if SMTP password is configured
+  const isSmtpConfigured = !!(process.env.EMAIL_HOST_PASSWORD);
 
   if (!isSmtpConfigured) {
     console.log('\n==================================================');
-    console.log('✉️  [LOCAL EMAIL LOG - SMTP NOT FULLY CONFIGURED]');
-    console.log(`From: ${mailOptions.from}`);
+    console.log('✉️  [LOCAL EMAIL LOG - EMAIL_HOST_PASSWORD not set in .env]');
     console.log(`To: ${mailOptions.to}`);
     console.log(`Subject: ${mailOptions.subject}`);
     console.log('--------------------------------------------------');
@@ -185,8 +182,68 @@ async function sendPasswordResetEmail(userEmail, userName, resetLink) {
   return sendEmail({ to: userEmail, subject, html, text });
 }
 
+/**
+ * Send Support Ticket Email to Admin
+ */
+async function sendSupportTicketEmail(customerEmail, customerName, ticketSubject, ticketMessage) {
+  const adminEmail = 'code.deepak007@gmail.com';
+  const subject = `[SUPPORT TICKET] ${ticketSubject}`;
+  
+  const text = `New Support Ticket from ${customerName} (${customerEmail})\n\nSubject: ${ticketSubject}\n\nMessage:\n${ticketMessage}`;
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>New Support Ticket</title>
+      <style>
+        body { font-family: 'Inter', Helvetica, Arial, sans-serif; background-color: #f5f7fa; color: #333333; margin: 0; padding: 20px; }
+        .container { max-width: 600px; background-color: #ffffff; margin: 0 auto; padding: 40px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .header { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #d4380d; }
+        .divider { border-top: 1px solid #f0f0f0; margin: 24px 0; }
+        .info-table { width: 100%; border-collapse: collapse; }
+        .info-table td { padding: 8px; border-bottom: 1px solid #f0f0f0; }
+        .label { font-weight: bold; width: 120px; color: #555; }
+        .message-box { background-color: #fafafa; padding: 16px; border-radius: 8px; margin-top: 24px; white-space: pre-wrap; font-family: monospace; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">🎫 New Support Ticket</div>
+        
+        <table class="info-table">
+          <tr>
+            <td class="label">Customer Name:</td>
+            <td>${customerName}</td>
+          </tr>
+          <tr>
+            <td class="label">Customer Email:</td>
+            <td><a href="mailto:${customerEmail}">${customerEmail}</a></td>
+          </tr>
+          <tr>
+            <td class="label">Subject:</td>
+            <td>${ticketSubject}</td>
+          </tr>
+        </table>
+        
+        <div class="message-box">
+${ticketMessage}
+        </div>
+        
+        <div class="divider"></div>
+        <p style="font-size: 12px; color: #8c8c8c; text-align: center;">Sent from Soundora Support Portal</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({ to: adminEmail, subject, html, text });
+}
+
 module.exports = {
   sendEmail,
   sendOrderDeliveredEmail,
   sendPasswordResetEmail,
+  sendSupportTicketEmail,
 };

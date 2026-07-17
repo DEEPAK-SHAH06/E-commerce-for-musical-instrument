@@ -10,18 +10,42 @@ import { LanguageContext } from '../context/LanguageContext';
 const { Title, Text } = Typography;
 const { Countdown } = Statistic;
 
+const DEAL_DURATION_MS = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+const DEAL_DEADLINE_KEY = 'hotdeals_deadline';
+
+/**
+ * Returns a persistent 12-hour deadline stored in localStorage.
+ * If no deadline exists or the previous one has expired, a new one is created.
+ */
+function getPersistentDeadline() {
+  const stored = localStorage.getItem(DEAL_DEADLINE_KEY);
+  const now = Date.now();
+  if (stored) {
+    const deadline = parseInt(stored, 10);
+    if (deadline > now) {
+      // Still within the current 12-hour window — reuse it
+      return deadline;
+    }
+  }
+  // Expired or missing — start a fresh 12-hour window
+  const newDeadline = now + DEAL_DURATION_MS;
+  localStorage.setItem(DEAL_DEADLINE_KEY, String(newDeadline));
+  return newDeadline;
+}
+
 const HotDealsPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useContext(CartContext);
   const { t } = useContext(LanguageContext);
 
-  // Set deal countdown for the next 12 hours
-  const [deadline] = useState(Date.now() + 1000 * 60 * 60 * 12);
+  // Fixed 12-hour deadline — persists across page navigations, only resets when truly expired
+  const [deadline] = useState(() => getPersistentDeadline());
 
   useEffect(() => {
     fetchDeals();
   }, []);
+
 
   const fetchDeals = async () => {
     try {

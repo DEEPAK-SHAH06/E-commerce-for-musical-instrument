@@ -2,7 +2,7 @@
 import React, { useContext, useState } from 'react';
 import { Row, Col, Typography, Button, Table, Space, InputNumber, Card, Divider, Empty, message, Tag, Modal, Radio } from 'antd';
 import { DeleteOutlined, ArrowLeftOutlined, CreditCardOutlined, WalletOutlined, BankOutlined, DollarOutlined } from '@ant-design/icons';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
@@ -17,21 +17,53 @@ const CartPage = () => {
   const [loading, setLoading] = useState(false);
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   React.useEffect(() => {
     if (location.state?.checkout === true && user && cartItems.length > 0) {
+      if (location.state?.selectedItemId) {
+        setSelectedRowKeys([location.state.selectedItemId]);
+      } else if (selectedRowKeys.length === 0) {
+        setSelectedRowKeys(cartItems.map(item => item.id));
+      }
       setPaymentModalVisible(true);
       // Clear location state to prevent modal reopening on page refresh
       navigate(location.pathname, { replace: true, state: {} });
+    } else if (selectedRowKeys.length === 0 && cartItems.length > 0) {
+      // By default select all items in cart if nothing is selected
+      setSelectedRowKeys(cartItems.map(item => item.id));
     }
-  }, [location.state, user, cartItems, navigate, location.pathname]);
+  }, [location.state, user, cartItems.length, navigate, location.pathname]);
+
+  const selectedItems = cartItems.filter(item => selectedRowKeys.includes(item.id));
+  const selectedTotal = selectedItems.reduce((total, item) => total + item.price * item.quantity, 0);
+
+  React.useEffect(() => {
+    const paymentFailed = searchParams.get('payment_failed');
+    const orderId = searchParams.get('orderId');
+    if (paymentFailed === 'true' && orderId) {
+      message.error('Payment was cancelled or failed. Your order has been cancelled.');
+      api.put(`/orders/${orderId}/cancel`).catch(err => console.error('Failed to cancel order:', err));
+      
+      // Remove query params from the URL without reloading
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('payment_failed');
+      newParams.delete('orderId');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleCheckout = () => {
     if (!user) {
       message.warning(t('pleaseLoginCheckout'));
       navigate('/login');
+      return;
+    }
+    if (selectedItems.length === 0) {
+      message.warning('Please select at least one item to checkout.');
       return;
     }
     setPaymentModalVisible(true);
@@ -47,11 +79,11 @@ const CartPage = () => {
     try {
       // 1. Create the order in the database
       const orderData = {
-        totalAmount: cartTotal,
+        totalAmount: selectedTotal,
         status: 'Pending',
         paymentMethod: selectedPayment,
         paymentStatus: selectedPayment === 'cod' || selectedPayment === 'bank' ? 'PENDING' : 'UNPAID',
-        items: cartItems.map(item => ({
+        items: selectedItems.map(item => ({
           id: item.id,
           quantity: item.quantity,
           price: parseFloat(item.price)
@@ -60,6 +92,10 @@ const CartPage = () => {
 
       const orderRes = await api.post('/orders', orderData);
       const createdOrder = orderRes.data;
+      
+      const removeSelectedItemsFromCart = () => {
+        selectedItems.forEach(item => removeFromCart(item.id));
+      };
 
       // 2. Process based on selected payment gateway
       if (selectedPayment === 'esewa') {
@@ -80,23 +116,23 @@ const CartPage = () => {
         });
         
         document.body.appendChild(form);
-        clearCart();
+        removeSelectedItemsFromCart();
         form.submit();
       } 
       else if (selectedPayment === 'khalti') {
         message.info('Redirecting to Khalti payment gateway...');
         const initRes = await api.post('/payment/khalti/initiate', { orderId: createdOrder.id });
-        clearCart();
+        removeSelectedItemsFromCart();
         window.location.href = initRes.data.payment_url;
       } 
       else {
         // Cash on Delivery or Bank Transfer
         if (selectedPayment === 'cod') {
-          message.success('Order placed! Please pay ' + t('currencySymbol') + cartTotal.toLocaleString('en-IN') + ' in cash upon delivery.');
+          message.success('Order placed! Please pay ' + t('currencySymbol') + selectedTotal.toLocaleString('en-IN') + ' in cash upon delivery.');
         } else {
           message.success('Order placed! Direct Bank Transfer details will be sent to your email.');
         }
-        clearCart();
+        removeSelectedItemsFromCart();
         setPaymentModalVisible(false);
         navigate('/dashboard');
       }
@@ -169,6 +205,10 @@ const CartPage = () => {
             dataSource={cartItems} 
             rowKey="id" 
             pagination={false} 
+            rowSelection={{
+              selectedRowKeys,
+              onChange: (newSelectedRowKeys) => setSelectedRowKeys(newSelectedRowKeys),
+            }}
             style={{ background: '#fff', borderRadius: 8, overflow: 'hidden' }}
           />
           <Button icon={<ArrowLeftOutlined />} style={{ marginTop: 24 }}>
@@ -178,8 +218,8 @@ const CartPage = () => {
         <Col xs={24} lg={8}>
           <Card title={t('orderSummary')} style={{ borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <Text>{t('subtotal')} ({cartItems.length} items):</Text>
-              <Text strong>${cartTotal.toFixed(2)}</Text>
+              <Text>{t('subtotal')} ({selectedItems.length} selected):</Text>
+              <Text strong>${selectedTotal.toFixed(2)}</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
               <Text>{t('shipping')}:</Text>
@@ -188,7 +228,7 @@ const CartPage = () => {
             <Divider />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
               <Title level={4} style={{ margin: 0 }}>{t('total')}:</Title>
-              <Title level={4} style={{ margin: 0, color: '#f5222d' }}>${cartTotal.toFixed(2)}</Title>
+              <Title level={4} style={{ margin: 0, color: '#f5222d' }}>${selectedTotal.toFixed(2)}</Title>
             </div>
             <Button 
               type="primary" 
@@ -222,7 +262,7 @@ const CartPage = () => {
           </Text>
         </div>
         
-        <div style={{ width: '100%', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ width: '92%', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* eSewa */}
           <div 
             onClick={() => setSelectedPayment('esewa')}

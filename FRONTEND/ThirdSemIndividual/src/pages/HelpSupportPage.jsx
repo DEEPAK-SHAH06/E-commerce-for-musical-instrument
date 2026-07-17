@@ -3,6 +3,7 @@ import React, { useState, useContext } from 'react';
 import { Row, Col, Typography, Form, Input, Button, Collapse, Card, message, Space } from 'antd';
 import { MailOutlined, PhoneOutlined, EnvironmentOutlined, QuestionCircleOutlined, CustomerServiceOutlined } from '@ant-design/icons';
 import { LanguageContext } from '../context/LanguageContext';
+import api from '../api/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;
@@ -12,14 +13,22 @@ const HelpSupportPage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     setLoading(true);
-    // Simulate API ticket submission
-    setTimeout(() => {
-      message.success(t('ticketSuccess'));
-      form.resetFields();
+    try {
+      const response = await api.post('/support/ticket', values);
+      if (response.data.success) {
+        message.success(t('ticketSuccess') || 'Support ticket submitted successfully!');
+        form.resetFields();
+      } else {
+        message.error('Failed to submit ticket. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting ticket:', error);
+      message.error(error.response?.data?.message || 'Failed to submit ticket. Please try again.');
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   // FAQ Content based on Language

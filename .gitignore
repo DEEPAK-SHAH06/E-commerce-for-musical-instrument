@@ -27,3 +27,5 @@ dist-ssr
 /BACKEND/.env
 env/
 images/
+
+context.txt
