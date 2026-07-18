@@ -160,7 +160,7 @@ const CartPage = () => {
       title: t('price'),
       dataIndex: 'price',
       key: 'price',
-      render: (price) => `$${parseFloat(price).toFixed(2)}`,
+      render: (price) => `Rs. ${parseFloat(price).toFixed(2)}`,
     },
     {
       title: t('quantity'),
@@ -173,7 +173,7 @@ const CartPage = () => {
     {
       title: t('total'),
       key: 'total',
-      render: (_, record) => `$${(parseFloat(record.price) * record.quantity).toFixed(2)}`,
+      render: (_, record) => `Rs. ${(parseFloat(record.price) * record.quantity).toFixed(2)}`,
     },
     {
       title: t('action'),
@@ -219,7 +219,7 @@ const CartPage = () => {
           <Card title={t('orderSummary')} style={{ borderRadius: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
               <Text>{t('subtotal')} ({selectedItems.length} selected):</Text>
-              <Text strong>${selectedTotal.toFixed(2)}</Text>
+              <Text strong>Rs. {selectedTotal.toFixed(2)}</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
               <Text>{t('shipping')}:</Text>
@@ -228,7 +228,7 @@ const CartPage = () => {
             <Divider />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
               <Title level={4} style={{ margin: 0 }}>{t('total')}:</Title>
-              <Title level={4} style={{ margin: 0, color: '#f5222d' }}>${selectedTotal.toFixed(2)}</Title>
+              <Title level={4} style={{ margin: 0, color: '#f5222d' }}>Rs. {selectedTotal.toFixed(2)}</Title>
             </div>
             <Button 
               type="primary" 
