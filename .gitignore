@@ -29,3 +29,4 @@ env/
 images/
 
 context.txt
+jest.setup.js
